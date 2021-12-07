@@ -2,8 +2,16 @@ import { Button, Card, Row } from 'react-bootstrap';
 import { useState } from 'react';
 import Task from '../components/Task';
 import EditTask from '../components/EditTask';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectLanes } from '../features/lanesSlice';
+import { selectTasks, nextState, saveTask } from '../features/tasksSlice';
+
 
 function Lanes(props) {
+
+    const lanes = useSelector(selectLanes);
+    const tasks = useSelector(selectTasks);
+    const dispatch = useDispatch();
 
     const [editingTask, setEditingTask] = useState(null);
 
@@ -22,26 +30,20 @@ function Lanes(props) {
         setEditingTask(task);    
     }
 
-    function changeState(task){
-        console.log("lanes edit: %o",task);
-        props.changeState(task);
-    }
-
-
     function getTasks(lane){
-        return Object.values(props.tasks).filter(task => task.status === lane.status);  
+        return Object.values(tasks).filter(task => task.status === lane.status);  
     }
 
-    let lanes = props.lanes.map((lane, index) => {
+    let lanesElement = lanes.map((lane, index) => {
 
         let button = null;
-        let tasks = getTasks(lane).map(task => <Task task={task} edit={() => edit(task)} changeState={() => changeState(task)}></Task>);
+        let tasks = getTasks(lane).map(task => <Task task={task} edit={() => edit(task)} changeState={() => dispatch(nextState(task))}></Task>);
 
         if (index === 0) {
             button = <Button variant="primary" size="sm" className="pull-right" onClick={addTask}>Add</Button>
         }
 
-        return <div className="col-md-4 col-xs-12">
+        return <div className="col-md-4 col-xs-12" key={lane.id}>
             <Card key={lane.id}>
                 <Card.Header>
                     {lane.title}{button}
@@ -55,8 +57,8 @@ function Lanes(props) {
     })
     return (
         <>
-            <Row>{lanes}</Row>
-            <EditTask task={editingTask} saveTask={props.saveTask}></EditTask>
+            <Row>{lanesElement}</Row>
+            <EditTask task={editingTask} saveTask={(task) => dispatch(saveTask(task))}></EditTask>
         </>
     )
 }
